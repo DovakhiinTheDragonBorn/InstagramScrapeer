@@ -13,6 +13,26 @@ import os
 
 
 
+def download_image(imageHTML,i):
+    imageSoup = BeautifulSoup(imageHTML,'lxml')
+    imageTag = imageSoup.find('img',srcset=True)
+    imageSource = imageTag['src']
+        
+    if imageTag:
+        try:
+            route = 'Data/'+targetUser+'/'+str(i)+'.jpg'
+            f = open(route,'wb')
+            f = open(''+targetUser+'/'+str(i)+'.jpg','wb')
+            f.write(requests.get(imageSource).content)
+            f.close()
+            print(route + " Downloaded")
+            return True
+        except MissingSchema:
+            print('Missing Schema')
+            f.close()
+            os.remove(route)
+            return False
+
 targetUser=input('UserName: @')
 driver = webdriver.Chrome('C:\\WebDrivers\\chromedriver.exe')
 driver.get('https://www.instagram.com/')
@@ -57,24 +77,17 @@ try:
     for link in links:
         driver.get('https://www.instagram.com'+link)
         imageHTML = driver.page_source
-        imageSoup = BeautifulSoup(imageHTML,'lxml')
-        imageTag = imageSoup.find('img',srcset=True)
-        imageSource = imageTag['src']
-        if imageTag:
+        if download_image(imageHTML,i):
+            i=i+1
+        while True:
             try:
-                f = open(targetUser+'/'+str(i)+'.jpg','wb')
-                f.write(requests.get(imageSource).content)
-                f.close()
-                i = i+1
-            except MissingSchema:
-                print('Missing Schema')
-                f.close()
-                os.remove(targetUser+'/'+str(i)+'.jpg')
+                WebDriverWait(driver,1).until(EC.presence_of_element_located((By.XPATH,'//div[@class="coreSpriteRightChevron"]'))).click()
+                imageHTML = driver.page_source
+                if download_image(imageHTML,i):
+                    i=i+1
+            except TimeoutException:
+                break
+
 
 except TimeoutException:
     print('Page took too long to load') 
-
-# for link in links:
-#         print(link)
-
-# print('LinkCount: '+len(links))
