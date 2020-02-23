@@ -94,6 +94,14 @@ try:
         imageURL = imageTag['src']
         if download_image(imageURL,i):
             i=i+1
+        
+        else:
+            videoHTML = driver.page_source
+            videoSoup = BeautifulSoup(videoHTML,'lxml')
+            videoTag = imageSoup.find('video',poster=True)
+            videoURL = videoTag['src']
+            if download_video(videoURL,i):
+                i=i+1
 
         while True:
             try:
@@ -116,7 +124,7 @@ try:
 
             except TimeoutException:
                 imageTag = imageSoup.find_all('img',srcset=True)
-                if  len(imageTag):
+                if  len(imageTag)>2:
                     imageTag = imageTag[1]
                     if imageURL != imageTag['src']:
                         imageURL = imageTag['src']
