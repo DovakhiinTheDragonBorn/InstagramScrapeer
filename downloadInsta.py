@@ -13,33 +13,43 @@ import os
 
 
 
-def download_image(imageHTML,i):
-    imageSoup = BeautifulSoup(imageHTML,'lxml')
-    imageTag = imageSoup.find('img',srcset=True)
-    imageSource = imageTag['src']
-        
-    if imageTag:
-        try:
-            route = 'Data/'+targetUser+'/'+str(i)+'.jpg'
-            f = open(route,'wb')
-            f = open(''+targetUser+'/'+str(i)+'.jpg','wb')
-            f.write(requests.get(imageSource).content)
-            f.close()
-            print(route + " Downloaded")
-            return True
-        except MissingSchema:
-            print('Missing Schema')
-            f.close()
-            os.remove(route)
-            return False
+def download_video(videoURL,i):
+    try:
+        route = 'Data/'+targetUser+'/'+str(i)+'.mp4'
+        f = open(route,'wb')
+        f = open(route,'wb')
+        f.write(requests.get(videoURL).content)
+        f.close()
+        print(route + " Downloaded")
+        return True
+    except MissingSchema:
+        print('Missing Schema')
+        f.close()
+        os.remove(route)
+        return False
+
+def download_image(imageURL,i):
+    try:
+        route = 'Data/'+targetUser+'/'+str(i)+'.jpg'
+        f = open(route,'wb')
+        f = open(route,'wb')
+        f.write(requests.get(imageURL).content)
+        f.close()
+        print(route + " Downloaded")
+        return True
+    except MissingSchema:
+        print('Missing Schema')
+        f.close()
+        os.remove(route)
+        return False
 
 targetUser=input('UserName: @')
 driver = webdriver.Chrome('C:\\WebDrivers\\chromedriver.exe')
 driver.get('https://www.instagram.com/')
 delay=10
 
-if not os.path.exists(targetUser):
-    os.makedirs(targetUser)
+if not os.path.exists('Data/'+targetUser):
+    os.makedirs('Data/'+targetUser)
 
 anchors = []
 links = []
@@ -52,7 +62,6 @@ try:
     WebDriverWait(driver,delay).until(EC.presence_of_element_located((By.XPATH,'//button[contains(text(),"Not Now")]'))).click()
     # sleep(5)
     driver.get('https://www.instagram.com/'+targetUser)
-
 
     scroll_pause_time = 2
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -74,18 +83,48 @@ try:
                     links.append(anchor['href'])
 
     i=0
+    imageURL="blank"
+    
     for link in links:
         driver.get('https://www.instagram.com'+link)
+        sleep(2)
         imageHTML = driver.page_source
-        if download_image(imageHTML,i):
+        imageSoup = BeautifulSoup(imageHTML,'lxml')
+        imageTag = imageSoup.find('img',srcset=True)
+        imageURL = imageTag['src']
+        if download_image(imageURL,i):
             i=i+1
+
         while True:
             try:
-                WebDriverWait(driver,1).until(EC.presence_of_element_located((By.XPATH,'//div[@class="coreSpriteRightChevron"]'))).click()
+                WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH,'//div[@class="    coreSpriteRightChevron"]'))).click()
+                sleep(2)
                 imageHTML = driver.page_source
-                if download_image(imageHTML,i):
-                    i=i+1
+                imageSoup = BeautifulSoup(imageHTML,'lxml')
+                imageTag = imageSoup.find('img',srcset=True)
+                if imageURL != imageTag['src']:
+                    imageURL = imageTag['src']
+                    if download_image(imageURL,i):
+                        i=i+1
+                    else:
+                        videoTag = imageSoup.find('video',poster=True)
+                        videoURL = videoTag['src']
+                        if download_video(videoURL,i):
+                            i=i+1
+
             except TimeoutException:
+                imageTag = imageSoup.find_all('img',srcset=True)
+                if  len(imageTag):
+                    imageTag = imageTag[1]
+                    if imageURL != imageTag['src']:
+                        imageURL = imageTag['src']
+                        if download_image(imageURL,i):
+                            i=i+1
+                        else:
+                            videoTag = imageSoup.find('video',poster=True)
+                            videoURL = videoTag['src']
+                            if download_video(videoURL,i):
+                                i=i+1
                 break
 
 
