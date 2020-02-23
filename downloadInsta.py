@@ -115,12 +115,18 @@ try:
                     if download_image(imageURL,i):
                         i=i+1
                     else:
-                        videoHTML = driver.page_source
-                        videoSoup = BeautifulSoup(videoHTML,'lxml')
-                        videoTag = imageSoup.find('video',poster=True)
-                        videoURL = videoTag['src']
-                        if download_video(videoURL,i):
-                            i=i+1
+                        try: 
+                            WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH,'//span[@aria-label="play"]'))).click()
+                            WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH,'//div[@aria-label="Control"]'))).click()
+                            videoHTML = driver.page_source
+                            videoSoup = BeautifulSoup(videoHTML,'lxml')
+                            videoTag = imageSoup.find('video',poster=True)
+                            videoURL = videoTag['src']
+                            if download_video(videoURL,i):
+                                i=i+1
+                        except:
+                            continue    
+                        
 
             except TimeoutException:
                 imageTag = imageSoup.find_all('img',srcset=True)
@@ -137,8 +143,22 @@ try:
                             videoURL = videoTag['src']
                             if download_video(videoURL,i):
                                 i=i+1
+                else:
+                    try:
+                        WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH,'//span[@aria-label="play"]'))).click()
+                        WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH,'//div[@aria-label="Control"]'))).click()
+                        videoHTML = driver.page_source
+                        videoSoup = BeautifulSoup(videoHTML,'lxml')
+                        videoTag = imageSoup.find('video',poster=True)
+                        videoURL = videoTag['src']
+                        if download_video(videoURL,i):
+                            i=i+1
+                    except:
+                        break
                 break
 
 
 except TimeoutException:
     print('Page took too long to load') 
+
+print('Successfully Downloaded '+ i+ ' files')
