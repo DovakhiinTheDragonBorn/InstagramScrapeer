@@ -107,6 +107,8 @@ try:
                     if download_image(imageURL,i):
                         i=i+1
                     else:
+                        videoHTML = driver.page_source
+                        videoSoup = BeautifulSoup(videoHTML,'lxml')
                         videoTag = imageSoup.find('video',poster=True)
                         videoURL = videoTag['src']
                         if download_video(videoURL,i):
@@ -121,6 +123,8 @@ try:
                         if download_image(imageURL,i):
                             i=i+1
                         else:
+                            videoHTML = driver.page_source
+                            videoSoup = BeautifulSoup(videoHTML,'lxml')
                             videoTag = imageSoup.find('video',poster=True)
                             videoURL = videoTag['src']
                             if download_video(videoURL,i):
